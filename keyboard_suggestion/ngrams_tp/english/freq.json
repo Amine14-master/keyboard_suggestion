@@ -1,0 +1,9 @@
+{
+  "unigrams": 23217,
+  "bigrams": 129375,
+  "trigrams": 206718,
+  "quadrigrams": 229954,
+  "pentagrams": 236117,
+  "total_tokens": 240393,
+  "vocabulary_size": 23217
+}

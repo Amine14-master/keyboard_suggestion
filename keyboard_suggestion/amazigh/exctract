@@ -1,0 +1,52 @@
+import mwxml
+import mwparserfromhell
+import bz2
+import re
+
+input_dump = "kabwiki-20250620-pages-articles.xml.bz2"
+output_file = "kabyle_corpus.txt"
+
+# Regexes
+TEMPLATE_RE = re.compile(r"\{\{.*?\}\}", re.DOTALL)
+LINK_RE = re.compile(r"\[\[.*?\]\]")
+EXT_LINK_RE = re.compile(r"\[https?:\/\/[^\]]*\]")
+HTML_RE = re.compile(r"<[^>]+>")
+WHITESPACE_RE = re.compile(r"\s+")
+
+def clean_text(text):
+    # Remove templates {{...}}
+    text = TEMPLATE_RE.sub(" ", text)
+
+    # Remove internal links [[...]]
+    text = LINK_RE.sub(" ", text)
+
+    # Remove external links [http...]
+    text = EXT_LINK_RE.sub(" ", text)
+
+    # Remove HTML tags
+    text = HTML_RE.sub(" ", text)
+
+    # Now parse remaining wiki markup
+    parsed = mwparserfromhell.parse(text)
+    text = parsed.strip_code()
+
+    # Normalize spacing
+    text = WHITESPACE_RE.sub(" ", text).strip()
+
+    return text
+
+
+with bz2.open(input_dump) as dump, open(output_file, "w", encoding="utf-8") as out:
+    for page in mwxml.Dump.from_file(dump):
+        if page.redirect:
+            continue
+
+        for revision in page:
+            if not revision.text:
+                continue
+
+            txt = clean_text(revision.text)
+            if txt:
+                out.write(txt + "\n")
+
+print(" Extraction terminée → kabyle_corpus.txt")
